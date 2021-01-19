@@ -6,7 +6,11 @@ const cors = require('cors');
 
 require('dotenv').config();
 
-let app = express();
-app.listen(3000, () => {
-  console.log('server is listening on port 3000');
+const app  = express();
+app.use(cors());
+
+const PORT = process.env.PORT || 3111;
+
+app.listen(PORT, () => {
+  console.log(`server is listening on PORT ${PORT}`);
 });
