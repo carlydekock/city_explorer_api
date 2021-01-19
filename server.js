@@ -20,6 +20,11 @@ app.get('/', (request, response) => {
 });
 
 app.get('/location', (request, response) => {
+  if(request.query.city === ''){
+    response.status(500).send('Error, pick a city to explore');
+    return;
+  }
+
   const theDataArrayFromLocationJson = require('./data/location.json');
   const theDataObjFromJson = theDataArrayFromLocationJson[0];
   const searchedCity = request.query.city;
