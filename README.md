@@ -20,3 +20,4 @@ Beginning to build an API server for the City Explorer Application. This will al
 
 ## Credits and Collaborations
 - Jan 18: Worked at lab table with Jason Q and Dar-Ci
+
