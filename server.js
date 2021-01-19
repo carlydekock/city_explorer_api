@@ -31,9 +31,8 @@ app.get('/location', (request, response) => {
     theDataObjFromJson.lat,
     theDataObjFromJson.lon
   );
-
+  console.log(newLocation);
   response.send(newLocation);
-
 });
 
 //normalize data with constructor
