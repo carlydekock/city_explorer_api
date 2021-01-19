@@ -35,6 +35,19 @@ app.get('/location', (request, response) => {
   response.send(newLocation);
 });
 
+app.get('/weather', (request, response) => {
+  const weatherData = require('./data/weather.json');
+  // const theDataWeatherObjFromJson = weatherData.data;
+  const arr = [];
+  weatherData.data.forEach(jsonObj => {
+    const weather = new Weather(
+      jsonObj.weather.description,
+      jsonObj.datetime
+    );
+    arr.push(weather);
+  });
+  response.send(arr);
+});
 //normalize data with constructor
 
 
@@ -44,6 +57,11 @@ function Location(search_query, formatted_query, latitude, longitude){
   this.formatted_query = formatted_query;
   this.longitude = longitude;
   this.latitude = latitude;
+}
+
+function Weather(forecast, time){
+  this.forecast = forecast;
+  this.time = time;
 }
 
 // ==== Start the server ====
