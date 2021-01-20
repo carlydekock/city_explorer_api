@@ -46,16 +46,27 @@ app.get('/location', (request, response) => {
 });
 
 app.get('/weather', (request, response) => {
-  const weatherData = require('./data/weather.json');
-  const arr = weatherData.data.map(jsonObj => {
-    const weather = new Weather(
-      jsonObj.weather.description,
-      jsonObj.valid_date
-    );
-    return weather;
-  });
-  response.send(arr);
+  const searchedCity = request.query.search_query;
+  console.log(searchedCity);
+  const key = process.env.WEATHER_API_KEY;
+  const url = `https://api.weatherbit.io/v2.0/forecast/daily/current?days=8&city=${searchedCity}&country=US&key=${key}`;
+  superagent.get(url).then(result => {
+    const weatherData = result.body;
+    const arr = weatherData.data.map(jsonObj => {
+      const weather = new Weather(
+        jsonObj.weather.description,
+        jsonObj.valid_date
+      );
+      return weather;
+    });
+    response.send(arr);
+  })
+    .catch(error => {
+      response.status(500).send('weatherbit failed');
+      console.log(error.message);
+    });
 });
+// const weatherData = require('./data/weather.json');
 //normalize data with constructor
 
 
