@@ -42,14 +42,12 @@ app.get('/location', (request, response) => {
 
 app.get('/weather', (request, response) => {
   const weatherData = require('./data/weather.json');
-  // const theDataWeatherObjFromJson = weatherData.data;
-  const arr = [];
-  weatherData.data.forEach(jsonObj => {
+  const arr = weatherData.data.map(jsonObj => {
     const weather = new Weather(
       jsonObj.weather.description,
-      jsonObj.datetime
+      jsonObj.valid_date
     );
-    arr.push(weather);
+    return weather;
   });
   response.send(arr);
 });
