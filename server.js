@@ -47,7 +47,7 @@ app.get('/location', (request, response) => {
 
 app.get('/weather', (request, response) => {
   const searchedCity = request.query.search_query;
-  console.log(searchedCity);
+  // console.log(searchedCity);
   const key = process.env.WEATHER_API_KEY;
   const url = `https://api.weatherbit.io/v2.0/forecast/daily/current?days=8&city=${searchedCity}&country=US&key=${key}`;
   superagent.get(url).then(result => {
@@ -66,8 +66,33 @@ app.get('/weather', (request, response) => {
       console.log(error.message);
     });
 });
-// const weatherData = require('./data/weather.json');
-//normalize data with constructor
+
+app.get('/parks', (request, response) => {
+
+  const key = process.env.PARKS_API_KEY;
+  const searchedCity = request.query.search_query;
+  console.log(searchedCity);
+  const url = `https://developer.nps.gov/api/v1/parks?q=${searchedCity}&limit=10&api_key=${key}`;
+  superagent.get(url).then(result => {
+    const parksData = result.body;
+    console.log(parksData.data[0]);
+    const parkArray = parksData.data.map(parkObj => {
+      const park = new Park(
+        parkObj.fullName,
+        parkObj.addresses[0].line1,
+        parkObj.entranceFees.cost,
+        parkObj.description,
+        parkObj.url
+      );
+      return park;
+    });
+    response.send(parkArray);
+  })
+    .catch(error => {
+      response.status(500).send('parksapi failed');
+      console.log(error.message);
+    });
+});
 
 
 // ==== Helper Functions ====
@@ -81,6 +106,14 @@ function Location(search_query, formatted_query, latitude, longitude) {
 function Weather(forecast, time) {
   this.forecast = forecast;
   this.time = time;
+}
+
+function Park(name, address, fee, description, url) {
+  this.name = name;
+  this.address = address;
+  this.fee = fee;
+  this.description = description;
+  this.url = url;
 }
 
 // ==== Start the server ====
