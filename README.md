@@ -59,3 +59,4 @@ Actual time needed to complete: 1 hour 45 minutes
 - Jan 18: Jason D helped troubleshoot locations to-do
 - Jan 18: Michael Eclavea (TA) helped with weather to-do
 - Jan 19: Worked at lab table with Jason Q and Sang
+- Jan 19: Jason D helped with rendering all location address data
