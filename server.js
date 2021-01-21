@@ -5,10 +5,14 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const superagent = require('superagent'); //this is for getting data from a url
+const pg = require('pg');
 
 // ==== setup the application (server) ====
 const app = express(); // creates a server from the express library
 app.use(cors()); // app.use loads middleware - we are loading cors so that requests don't get blocked when they are local
+
+const DATABASE_URL = process.env.DATABASE_URL;
+const client = new pg.Client(DATABASE_URL);
 
 // ==== other global variables ====
 const PORT = process.env.PORT || 3111;
@@ -26,22 +30,41 @@ app.get('/parks', getParksInfo);
 // ==== Route callbacks ====
 
 function getGpsInfo(request, response) {
-  if (request.query.city === '') {
-    response.status(500).send('Error, pick a city to explore');
-    return;
-  }
   const searchedCity = request.query.city;
   const key = process.env.GEOCODE_API_KEY;
-  const url = `https://us1.locationiq.com/v1/search.php?key=${key}&q=${searchedCity}&format=json`;
-  superagent.get(url).then(result => {
-    const locationObject = result.body[0];
-    const newLocation = new Location(searchedCity,locationObject);
-    response.send(newLocation);
-  })
-    .catch(error => {
-      response.status(500).send('locationiq failed');
-      console.log(error.message);
-    });
+
+  //if it is in the db already, use that
+  const sqlQuery = 'SELECT * FROM location WHERE search_query=$1';
+  const sqlArray = [searchedCity];
+  client.query(sqlQuery, sqlArray).then(result => {
+    console.log('result.rows', result.rows);
+
+    if (result.rows.length !== 0) {
+      response.send(result.rows[0]);
+    } else {
+      if (request.query.city === '') {
+        response.status(500).send('Error, pick a city to explore');
+        return;
+      }
+      const url = `https://us1.locationiq.com/v1/search.php?key=${key}&q=${searchedCity}&format=json`;
+      superagent.get(url).then(result => {
+        const locationObject = result.body[0];
+        const newLocation = new Location(searchedCity, locationObject);
+        //Save location to database
+        const sqlQuery = 'INSERT INTO location (search_query, formatted_query, latitude, longitude) VALUES($1, $2, $3, $4)';
+        const sqlArray = [newLocation.search_query, newLocation.formatted_query, newLocation.latitude, newLocation.longitude];
+
+        client.query(sqlQuery, sqlArray);
+
+        response.send(newLocation);
+      })
+        .catch(error => {
+          response.status(500).send('locationiq failed');
+          console.log(error.message);
+        });
+
+    }
+  });
 }
 
 function getWeatherInfo(request, response) {
@@ -53,7 +76,7 @@ function getWeatherInfo(request, response) {
     const arr = weatherData.data.map(weatherObj => new Weather(weatherObj));
     response.send(arr);
   })
-    .catch (error => {
+    .catch(error => {
       response.status(500).send('weatherbit failed');
       console.log(error.message);
     });
@@ -96,6 +119,8 @@ function Park(object) {
 }
 
 // ==== Start the server ====
+client.connect();
+
 app.listen(PORT, () => {
   console.log(`server is listening on PORT ${PORT}`);
 });
