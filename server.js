@@ -18,102 +18,81 @@ app.get('/', (request, response) => {
   response.send('you made it home');
 });
 
-app.get('/location', (request, response) => {
+app.get('/location', getGpsInfo);
+app.get('/weather', getWeatherInfo);
+app.get('/parks', getParksInfo);
+
+
+// ==== Route callbacks ====
+
+function getGpsInfo(request, response) {
   if (request.query.city === '') {
     response.status(500).send('Error, pick a city to explore');
     return;
   }
-
   const searchedCity = request.query.city;
   const key = process.env.GEOCODE_API_KEY;
-
-  // const theDataArrayFromLocationJson = require('./data/location.json');
   const url = `https://us1.locationiq.com/v1/search.php?key=${key}&q=${searchedCity}&format=json`;
   superagent.get(url).then(result => {
-    const theDataObjFromJson = result.body[0];
-    const newLocation = new Location(
-      searchedCity,
-      theDataObjFromJson.display_name,
-      theDataObjFromJson.lat,
-      theDataObjFromJson.lon
-    );
+    const locationObject = result.body[0];
+    const newLocation = new Location(searchedCity,locationObject);
     response.send(newLocation);
   })
     .catch(error => {
       response.status(500).send('locationiq failed');
       console.log(error.message);
     });
-});
+}
 
-app.get('/weather', (request, response) => {
+function getWeatherInfo(request, response) {
   const searchedCity = request.query.search_query;
-  // console.log(searchedCity);
   const key = process.env.WEATHER_API_KEY;
   const url = `https://api.weatherbit.io/v2.0/forecast/daily/current?days=8&city=${searchedCity}&country=US&key=${key}`;
   superagent.get(url).then(result => {
     const weatherData = result.body;
-    const arr = weatherData.data.map(jsonObj => {
-      const weather = new Weather(
-        jsonObj.weather.description,
-        jsonObj.valid_date
-      );
-      return weather;
-    });
+    const arr = weatherData.data.map(weatherObj => new Weather(weatherObj));
     response.send(arr);
   })
-    .catch(error => {
+    .catch (error => {
       response.status(500).send('weatherbit failed');
       console.log(error.message);
     });
-});
+}
 
-app.get('/parks', (request, response) => {
-
+function getParksInfo(request, response) {
   const key = process.env.PARKS_API_KEY;
   const searchedCity = request.query.search_query;
-  console.log(searchedCity);
   const url = `https://developer.nps.gov/api/v1/parks?q=${searchedCity}&limit=10&api_key=${key}`;
   superagent.get(url).then(result => {
     const parksData = result.body;
-    console.log(parksData.data[0]);
-    const parkArray = parksData.data.map(parkObj => {
-      const park = new Park(
-        parkObj.fullName,
-        `${parkObj.addresses[0].line1} ${parkObj.addresses[0].city}, ${parkObj.addresses[0].stateCode} ${parkObj.addresses[0].postalCode}`,
-        parkObj.entranceFees.cost,
-        parkObj.description,
-        parkObj.url
-      );
-      return park;
-    });
+    const parkArray = parksData.data.map(parkObject => new Park(parkObject));
     response.send(parkArray);
   })
     .catch(error => {
       response.status(500).send('parksapi failed');
       console.log(error.message);
     });
-});
-
+}
 
 // ==== Helper Functions ====
-function Location(search_query, formatted_query, latitude, longitude) {
-  this.search_query = search_query;
-  this.formatted_query = formatted_query;
-  this.longitude = longitude;
-  this.latitude = latitude;
+function Location(city, object) {
+  this.search_query = city;
+  this.formatted_query = object.display_name;
+  this.longitude = object.lon;
+  this.latitude = object.lat;
 }
 
-function Weather(forecast, time) {
-  this.forecast = forecast;
-  this.time = time;
+function Weather(object) {
+  this.forecast = object.weather.description;
+  this.time = object.valid_date;
 }
 
-function Park(name, address, fee, description, url) {
-  this.name = name;
-  this.address = address;
-  this.fee = fee;
-  this.description = description;
-  this.url = url;
+function Park(object) {
+  this.name = object.fullName;
+  this.address = `${object.addresses[0].line1} ${object.addresses[0].city}, ${object.addresses[0].stateCode} ${object.addresses[0].postalCode}`;
+  this.fee = object.entranceFees.fee;
+  this.description = object.description;
+  this.url = object.url;
 }
 
 // ==== Start the server ====
