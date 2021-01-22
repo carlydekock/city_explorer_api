@@ -116,11 +116,12 @@ function getMoviesInfo(request, response) {
 function getYelpInfo(request, response) {
   const key = process.env.YELP_API_KEY;
   const searchedCity = request.query.search_query;
-  const url = `https://api.yelp.com/v3/businesses/search?location=${searchedCity}&limit=20`;
+  const page = request.query.page;
+  const offset = (page - 1) * 5;
+  const url = `https://api.yelp.com/v3/businesses/search?location=${searchedCity}&limit=5&offset=${offset}`;
 
   superagent.get(url).set('Authorization', `Bearer ${key}`).then(result => {
     const yelpData = result.body;
-    console.log(yelpData);
     const yelpArray = yelpData.businesses.map(yelpObject => new Yelp(yelpObject));
     response.send(yelpArray);
   })
