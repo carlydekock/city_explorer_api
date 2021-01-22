@@ -26,6 +26,7 @@ app.get('/location', getGpsInfo);
 app.get('/weather', getWeatherInfo);
 app.get('/parks', getParksInfo);
 app.get('/movies', getMoviesInfo);
+app.get('/yelp', getYelpInfo);
 
 // ==== Route callbacks ====
 
@@ -112,6 +113,22 @@ function getMoviesInfo(request, response) {
     });
 }
 
+function getYelpInfo(request, response) {
+  const key = process.env.YELP_API_KEY;
+  const searchedCity = request.query.search_query;
+  const url = `https://api.yelp.com/v3/businesses/search?location=${searchedCity}&limit=20`;
+
+  superagent.get(url).set('Authorization', `Bearer ${key}`).then(result => {
+    const yelpData = result.body;
+    console.log(yelpData);
+    const yelpArray = yelpData.businesses.map(yelpObject => new Yelp(yelpObject));
+    response.send(yelpArray);
+  })
+    .catch(error => {
+      response.status(500).send('yelpapi failed');
+      console.log(error.message);
+    });
+}
 
 // ==== Helper Functions ====
 function Location(city, object) {
@@ -142,6 +159,14 @@ function Movie(object) {
   this.image_url = `https://image.tmdb.org/t/p/w500${object.poster_path}`;
   this.popularity = object.popularity;
   this.released_on = object.release_date;
+}
+
+function Yelp(object) {
+  this.name = object.name;
+  this.image_url = object.image_url;
+  this.price = object.price;
+  this.rating = object.rating;
+  this.url = object.url;
 }
 
 // ==== Start the server ====
