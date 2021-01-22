@@ -25,7 +25,7 @@ app.get('/', (request, response) => {
 app.get('/location', getGpsInfo);
 app.get('/weather', getWeatherInfo);
 app.get('/parks', getParksInfo);
-
+app.get('/movies', getMoviesInfo);
 
 // ==== Route callbacks ====
 
@@ -97,6 +97,22 @@ function getParksInfo(request, response) {
     });
 }
 
+function getMoviesInfo(request, response) {
+  const key = process.env.MOVIE_API_KEY;
+  const searchedCity = request.query.search_query;
+  const url = `https://api.themoviedb.org/3/search/movie?api_key=${key}&language=en-US&query=${searchedCity}&total_results=20`;
+  superagent.get(url).then(result => {
+    const movieData = result.body;
+    const movieArray = movieData.results.map(movieObject => new Movie(movieObject));
+    response.send(movieArray);
+  })
+    .catch(error => {
+      response.status(500).send('movieapi failed');
+      console.log(error.message);
+    });
+}
+
+
 // ==== Helper Functions ====
 function Location(city, object) {
   this.search_query = city;
@@ -113,9 +129,19 @@ function Weather(object) {
 function Park(object) {
   this.name = object.fullName;
   this.address = `${object.addresses[0].line1} ${object.addresses[0].city}, ${object.addresses[0].stateCode} ${object.addresses[0].postalCode}`;
-  this.fee = object.entranceFees.fee;
+  this.fee = object.entranceFees[0].cost;
   this.description = object.description;
   this.url = object.url;
+}
+
+function Movie(object) {
+  this.title = object.title;
+  this.overview = object.overview;
+  this.average_votes = object.vote_average;
+  this.total_votes = object.vote_count;
+  this.image_url = `https://image.tmdb.org/t/p/w500${object.poster_path}`;
+  this.popularity = object.popularity;
+  this.released_on = object.release_date;
 }
 
 // ==== Start the server ====
