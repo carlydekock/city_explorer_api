@@ -9,26 +9,46 @@
 Beginning to build an API server for the City Explorer Application. This will allow a user to search for a location, be presented with a map and some interesting information about the area they've selected. There are fully functionining APIs for location information, weather, and nearby parks. There is also a database to store previously searched locations. Today, we added movies as well as yelp information for restaurants showing 5 results at a time.
 
 ## Getting Started
-1. In Terminal:
+
+### What you need
+- Get API keys:
+  - LocationIQ
+  - Weatherbit
+  - National Parks Service
+  - The Movie Database API (TMDb)
+  - Yelp
+- Generate .env with variables of:
+  - PORT
+  - GEOCODE_API_KEY
+  - WEATHER_API_KEY
+  - PARKS_API_KEY
+  - MOVIE_API_KEY
+  - YELP_API_KEY
+- Get a connection for database URL
+- Install node modules: express, cors, dotenv, superagent, pg
+- Set up PORT
+
+### Steps to take
+- In Terminal:
   - ```touch server.js``` to create server file
   - ```npm init```
   - ```npm install -S cors dotenv superagent pg``` to install cors, dotenv, superagent, pg libraries
   - ```touch .env``` to create environment file
-1. Open up server in VS code or another code editor. Put all necessary API keys in .env file as well as PORT info and database info.
-1. Open up server.js file
-1. Load any packages first, declare variables for all packages needed
-1. Configure app
+- Open up server in VS code or another code editor. Put all necessary API keys in .env file as well as PORT info and database info.
+- Open up server.js file
+- Load any packages first, declare variables for all packages needed
+- Configure app
   - ```const app = express();```
   - ```app.use(cors());```
-1. Set global variables
+- Set global variables
   - ```const PORT = process.env.PORT```
-1. Routes
+- Routes
   - ```/location => {}```
   - ```/weather => [{}, {}]```
   - ```/parks => [{}, {}]```
-1. Route callbacks
-1. Helper functions
-1. Start the app
+- Route callbacks
+- Helper functions
+- Start the app
   - ```app.listen(PORT, () => {console.log('server is listening on Port ${PORT})});```
 
 ## Architecture
